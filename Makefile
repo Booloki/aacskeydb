@@ -5,7 +5,7 @@ exec_prefix = $(prefix)
 MKINSTALLDIRS = mkdir -p
 INSTALL = cp
 
-bindir = $(exec_prefix)/bin
+bindir = $(exec_prefix)/sbin
 
 installdirs: 
 	$(MKINSTALLDIRS) $(DESTDIR)$(bindir)

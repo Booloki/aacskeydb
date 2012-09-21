@@ -1,16 +1,20 @@
 #!/bin/bash
-# Download KEYDB.cfg if not already here
+# Download KEYDB.cfg and backup if already here.
 
-KEYDB_DIR="$HOME/.config/aacs"
+KEYDB_DIR="/etc/xdg/aacs"
 KEYDB_FILENAME="KEYDB.cfg"
+KEYDB_URL="http://vlc-aacs.whoknowsmy.name/files"
+
 echo -ne "\n *************************************\n"
 if [ ! -f $KEYDB_DIR/$KEYDB_FILENAME ]; then
 	mkdir -p $KEYDB_DIR
-	KEYDB_URL="http://vlc-aacs.whoknowsmy.name/files"
-	echo -ne " Downloading KEYDB.cfg...\n"
-	wget $KEYDB_URL/$KEYDB_FILENAME -O $KEYDB_DIR/$KEYDB_FILENAME
 else
-	echo -ne " KEYDB.cfg already installed in $KEYDB_DIR.\n"
+	echo -ne " Backup old $KEYDB_DIR/$KEYDB_FILENAME to $KEYDB_DIR/$KEYDB_FILENAME.back.\n"
+	cp $KEYDB_DIR/$KEYDB_FILENAME $KEYDB_DIR/$KEYDB_FILENAME.back
 fi
+
+echo -ne " Downloading KEYDB.cfg...\n"
+wget $KEYDB_URL/$KEYDB_FILENAME -O $KEYDB_DIR/$KEYDB_FILENAME
+
 echo -ne "\n *************************************\n"
 
