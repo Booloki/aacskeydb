@@ -6,7 +6,7 @@ This package will download keys database for AACS decoding library to allow encr
 About
 -------
 
-It only download KEYDB.cfg from [vlc-bluray.whoknowsmy.name](http://vlc-bluray.whoknowsmy.name/files/) or to /etc/xdg/.config/aacs/
+It only download KEYDB.cfg from [vlc-bluray.whoknowsmy.name](http://vlc-aacs.whoknowsmy.name/files/) or [vlc-aacs.whoknowsmy.name](http://vlc-bluray.whoknowsmy.name/files/) to /etc/xdg/aacs/ .
 
 License
 -------
