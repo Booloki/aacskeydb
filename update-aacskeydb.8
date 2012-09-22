@@ -1,0 +1,45 @@
+.TH UPDATE-AACSKEYDB 8 "September 21, 2012"
+
+.SH NAME
+update-aacskeydb \- program to get the  keys database for AACS encrypted Blu-Ray discs
+
+.SH SYNOPSIS
+.B update-aacskeydb
+.RI --install
+.br
+.B update-aacskeydb
+.RI --uninstall
+
+.SH DESCRIPTION
+The program
+.B update-aacskeydb
+takes care of
+downloading KEYDB.cfg from http://vlc-aacs.whoknowsmy.name or its mirrors
+to /etc/xdg/aacs/ directory (system wide).
+.PP
+The program
+.B update-aacskeydb
+is used in the
+.B postinst
+and
+.B prerm
+scripts of the Debian package,
+but this program can also be run manually by root.
+
+.SH OPTIONS
+.TP
+.B \-\-install
+To install or update(re-install) KEYDB.cfg file.
+.TP
+.B \-\-uninstall
+To remove the key.
+.TP
+.B \-\-verbose
+Produce detailed information about what's happening.
+.TP
+.B \-\-quiet
+Produce no informational output.
+
+.SH SEE ALSO
+.TP
+.B http://vlc-aacs.whoknowsmy.name

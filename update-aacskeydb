@@ -1,0 +1,190 @@
+#!/bin/sh
+
+# Based on update-flashplugin-nonfree by Bart Martens
+# Modified by someone who would rather stay anonymous
+
+# Copyright (C) 2006-2012 Bart Martens <bartm@knars.be>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+set -e
+
+return_0() {
+	return 0
+}
+
+trap "return_0" 0
+
+die_hard() {
+	echo "ERROR: $1" >&2
+	exit 1
+}
+
+[ `whoami` = "root" ] || die_hard "must be root"
+
+show_usage() {
+	echo "Usage:"
+	echo "  update-aacskeydb --install"
+	echo "  update-aacskeydb --uninstall"
+	echo "Additional options:"
+	echo "  --fast"
+	echo "  --verbose"
+	echo "  --quiet"
+	exit 1
+}
+
+getopt_temp=`getopt -o iusfvq --long install,uninstall,fast,verbose,quiet -n 'update-aacskeydb' -- "$@"` || show_usage
+eval set -- "$getopt_temp" || show_usage
+
+UNPACKDIR=`mktemp -d /tmp/aacskeydb.XXXXXXXXXX` || die_hard "mktemp failed"
+echo "$UNPACKDIR" | grep -q "^/tmp/aacskeydb\." || die_hard "paranoia"
+cd "$UNPACKDIR" || die_hard "cd failed"
+
+[ "$verbose" != "yes" ] || echo "temporary directory: $UNPACKDIR"
+
+do_cleanup() {
+        [ "$verbose" != "yes" ] || echo "cleaning up temporary directory $UNPACKDIR ..."
+        cd /
+        echo "$UNPACKDIR" | grep -q "^/tmp/aacskeydb\." || die_hard "paranoia"
+        rm -rf "$UNPACKDIR"
+}
+
+die_hard_with_a_cleanup() {
+        return_0
+        do_cleanup
+        die_hard "$1"
+}
+
+trap "die_hard_with_a_cleanup interrupted" INT
+
+ACTION=none
+fast=no
+verbose=no
+quiet=no
+
+while [ true ]
+do
+	case "$1" in
+		-i|--install)
+			ACTION="--install"
+			shift
+			;;
+		-u|--uninstall)
+			ACTION="--uninstall"
+			shift
+			;;
+		-f|--fast)
+			fast=yes
+			shift
+			;;
+		-v|--verbose)
+			verbose=yes
+			shift
+			;;
+		-q|--quiet)
+			quiet=yes
+			shift
+			;;
+		--)
+			shift
+			break
+			;;
+		*)
+			echo "Internal error!"
+			exit 1
+			;;
+	esac
+done
+
+[ "$ACTION" != "none" -a $# -eq 0 ] || show_usage
+[ "$quiet" != "yes" ] || verbose=no
+
+[ "$verbose" != "yes" ] || echo "options : $getopt_temp"
+
+die_hard_with_a_cleanup() {
+	return_0
+	do_cleanup
+	die_hard "$1"
+}
+
+trap "die_hard_with_a_cleanup interrupted" INT
+
+wgetquiet=' -q '
+wgetfast='-t 3 -T 15 '
+wgetalways=' -nd -P . '
+wgetprogress=' -v --progress=dot:default '
+
+case "$ACTION" in
+
+	--install)
+		[ "$verbose" != "yes" ] || echo "selected action = $ACTION"
+
+                random=`seq 1 2 | sort -R | head -n 1`
+		downloadfile=KEYDB.cfg
+		downloadurl1=http://vlc-aacs.whoknowsmy.name/files/$downloadfile
+		downloadurl2=http://vlc-bluray.whoknowsmy.name/files/$downloadfile
+                downloadurl=`eval "echo \\${downloadurl${random}}"`
+
+		wgetoptions="$wgetalways $wgetprogress"
+		[ "$quiet" != "yes" ] || wgetoptions="$wgetquiet $wgetalways"
+		[ "$fast" != "yes" ] || wgetoptions="$wgetoptions $wgetfast"
+		wgetoptions="$wgetoptions -O $UNPACKDIR/$downloadfile" # to change wget's message "Saving to: ..."
+		[ "$verbose" != "yes" ] || echo "wgetoptions=$wgetoptions"
+
+		[ "$verbose" != "yes" ] || [ ! -f $downloadfile ] || echo "downloading $downloadurl ..."
+		[ -f $downloadfile ] || \
+		HOME=/root \
+		wget $wgetoptions $downloadurl \
+			|| die_hard_with_a_cleanup "wget failed to download $downloadurl"
+
+		grep -q 'HOST_PRIV_KEY' $UNPACKDIR/$downloadfile || die_hard_with_a_cleanup "downloaded file is not valid"
+
+		targetdir=/etc/xdg/aacs
+
+		[ "$verbose" != "yes" ] || echo "moving $downloadfile to $targetdir ..."
+		rm -f $targetdir/$downloadfile
+		mv -f $UNPACKDIR/$downloadfile $targetdir
+
+		[ "$verbose" != "yes" ] || echo "setting permissions and ownership of $targetdir/$downloadfile ..."
+		chown root:root $targetdir/$downloadfile
+		chmod 644 $targetdir/$downloadfile
+
+		[ "$verbose" != "yes" ] || "Libaacs KEYDB.cfg installed"
+
+		[ "$verbose" != "yes" ] || echo "end of action $ACTION"
+
+		;;
+
+	--uninstall)
+		[ "$verbose" != "yes" ] || echo "selected action = $ACTION"
+
+		[ "$verbose" != "yes" ] || echo "removing files ..."
+		rm -f /etc/xdg/aacs/KEYDB.cfg
+
+		[ "$verbose" != "yes" ] || echo "end of action $ACTION"
+
+		;;
+
+	*)
+
+		do_cleanup
+		show_usage
+
+		;;
+
+esac
+
+do_cleanup
+
+[ "$verbose" != "yes" ] || echo "end of update-aacskeydb"
+
