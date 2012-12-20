@@ -159,7 +159,7 @@ case "$ACTION" in
 		chown root:root $targetdir/$downloadfile
 		chmod 644 $targetdir/$downloadfile
 
-		[ "$verbose" != "yes" ] || "Libaacs KEYDB.cfg installed"
+		[ "$verbose" != "yes" ] || echo "Libaacs KEYDB.cfg installed"
 
 		[ "$verbose" != "yes" ] || echo "end of action $ACTION"
 
